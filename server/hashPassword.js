@@ -1,10 +1,18 @@
-const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
 
-async function hashPassword() {
-  const password = 'password123';
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-  console.log('Hashed password:', hashedPassword);
-}
+const hashPassword = async (password) => {
+  try {
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    console.log("Hashed password:", hashedPassword);
+    return hashedPassword;
+  } catch (error) {
+    console.error("Error hashing password:", error.message);
+    throw error;
+  }
+};
 
-hashPassword().catch(console.error);
+// Example usage
+hashPassword("password123")
+  .then((hashed) => console.log("Generated Hash:", hashed))
+  .catch(console.error);

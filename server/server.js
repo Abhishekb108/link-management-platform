@@ -2,9 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const authRoutes = require('./routes/auth'); // Import auth routes
-const profileRoutes = require('./routes/profile'); // Import profile routes
-const User = require('./models/User'); // Import the User model
+const authRoutes = require('./routes/auth.js'); // Import auth routes
+const profileRoutes = require('./routes/profile.js'); // Import profile routes
+const User = require('./models/User.js'); // Import the User model
 
 dotenv.config();
 
@@ -13,8 +13,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:3000' // Allow requests from the frontend (React) running on port 3000
-}));
+ }));
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI).then(() => {
