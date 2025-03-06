@@ -36,6 +36,8 @@ const userSchema = new mongoose.Schema(
         title: { type: String, required: true, trim: true },
         url: { type: String, required: true, trim: true },
         enabled: { type: Boolean, default: false },
+        clickCount: { type: Number, default: 0 },
+        lastClicked: { type: Date }
       },
     ],
     shops: [
@@ -43,6 +45,8 @@ const userSchema = new mongoose.Schema(
         title: { type: String, required: true, trim: true },
         url: { type: String, required: true, trim: true },
         enabled: { type: Boolean, default: false },
+        clickCount: { type: Number, default: 0 },
+        lastClicked: { type: Date }
       },
     ],
     bannerColor: { type: String, default: "#000000", trim: true },

@@ -6,7 +6,6 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-// Middleware to verify JWT token
 const authMiddleware = (req, res, next) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
   if (!token) {
@@ -22,7 +21,6 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// Get user profile
 router.get("/", authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select("-password");
@@ -35,7 +33,6 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
-// Update basic user information
 router.put("/basic", authMiddleware, async (req, res) => {
   try {
     const { firstName, lastName, bio, profilePhoto, username, category } = req.body;
@@ -54,13 +51,18 @@ router.put("/basic", authMiddleware, async (req, res) => {
   }
 });
 
-// Update links
 router.put("/links", authMiddleware, async (req, res) => {
   try {
     const { links } = req.body;
+    
+    const updatedLinks = links.map(link => ({
+      ...link,
+      clickCount: link.clickCount || 0
+    }));
+    
     const user = await User.findByIdAndUpdate(
       req.user.userId,
-      { links },
+      { links: updatedLinks },
       { new: true, runValidators: true }
     ).select("-password");
 
@@ -73,13 +75,18 @@ router.put("/links", authMiddleware, async (req, res) => {
   }
 });
 
-// Update shops
 router.put("/shops", authMiddleware, async (req, res) => {
   try {
     const { shops } = req.body;
+    
+    const updatedShops = shops.map(shop => ({
+      ...shop,
+      clickCount: shop.clickCount || 0
+    }));
+    
     const user = await User.findByIdAndUpdate(
       req.user.userId,
-      { shops },
+      { shops: updatedShops },
       { new: true, runValidators: true }
     ).select("-password");
 
@@ -92,7 +99,6 @@ router.put("/shops", authMiddleware, async (req, res) => {
   }
 });
 
-// Update appearance settings
 router.put("/appearance", authMiddleware, async (req, res) => {
   try {
     const { bannerColor, appearanceSettings } = req.body;
@@ -106,6 +112,67 @@ router.put("/appearance", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+router.post("/track-click", authMiddleware, async (req, res) => {
+  try {
+    const { itemId, itemType } = req.body;
+    const user = await User.findById(req.user.userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (itemType === "link") {
+      const linkIndex = user.links.findIndex(link => link._id.toString() === itemId);
+      if (linkIndex !== -1) {
+        user.links[linkIndex].clickCount = (user.links[linkIndex].clickCount || 0) + 1;
+      }
+    } else if (itemType === "shop") {
+      const shopIndex = user.shops.findIndex(shop => shop._id.toString() === itemId);
+      if (shopIndex !== -1) {
+        user.shops[shopIndex].clickCount = (user.shops[shopIndex].clickCount || 0) + 1;
+      }
+    }
+
+    await user.save();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+router.get("/analytics", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select("links shops");
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    const linkAnalytics = user.links.map(link => ({
+      id: link._id,
+      title: link.title,
+      url: link.url,
+      clickCount: link.clickCount || 0
+    }));
+    
+    const shopAnalytics = user.shops.map(shop => ({
+      id: shop._id,
+      title: shop.title,
+      url: shop.url,
+      clickCount: shop.clickCount || 0
+    }));
+    
+    res.json({
+      links: linkAnalytics,
+      shops: shopAnalytics,
+      totalLinkClicks: linkAnalytics.reduce((sum, link) => sum + link.clickCount, 0),
+      totalShopClicks: shopAnalytics.reduce((sum, shop) => sum + shop.clickCount, 0)
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
