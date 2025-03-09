@@ -7,7 +7,7 @@ const auth = require("../middleware/auth.js");
 
 router.post("/signup", async (req, res) => {
   try {
-    const { firstName, lastName, email, password, username, category } = req.body;
+    const { firstName, lastName, email, password, username, category ,profilePhoto} = req.body;
 
     if (!firstName || !lastName || !email || !password || !username || !category) {
       return res.status(400).json({ message: "All fields are required" });
@@ -28,7 +28,7 @@ router.post("/signup", async (req, res) => {
       password: hashedPassword,
       username,
       category,
-      profilePhoto: "https://example.com/default-profile-photo.png",
+      profilePhoto: profilePhoto || "https://example.com/default-profile-photo.png",
       bio: "",
       bannerColor: "#000000",
       appearanceSettings: {
@@ -113,7 +113,7 @@ router.post("/login", async (req, res) => {
 
 router.get("/me", auth, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select("-password");
+    const user = await User.findById(req.user.userId).select("-password");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
